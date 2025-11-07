@@ -1,0 +1,21 @@
+{
+  "name": "mercadopago-integration",
+  "version": "1.0.0",
+  "description": "Integration project between the **Frutos Feito à Mão** website and the **Mercado Pago API** using **Node.js**.   The goal is to generate **QR codes for payments** through the `/v1/payments` endpoint and handle **webhook notifications** for payment status updates.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ramonmelod/mercadopago-integration.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Ramonmelod/mercadopago-integration/issues"
+  },
+  "homepage": "https://github.com/Ramonmelod/mercadopago-integration#readme"
+}
