@@ -1,15 +1,14 @@
-describe("Testa o endpoint GET /", () => {
-  test("Deve retornar status 200 e o JSON esperado", async () => {
-    const response = await fetch("http://localhost:8080");
+describe("GET in /users/me", () => {
+  test("shell return 200 and a user json", async () => {
+    const response = await fetch("http://localhost:8080/users/me");
 
     expect(response.status).toBe(200);
 
-    const contentType = response.headers.get("content-type");
-    expect(contentType).toMatch(/application\/json/);
+    const responseBody = await response.json();
 
-    const data = await response.json();
-
-    expect(data).toHaveProperty("nome", "Ramon");
-    expect(data).toHaveProperty("idade", 33);
+    expect(responseBody).toEqual({
+      first_name: "LUANA",
+      brand_name: "Frutos feito à mão ",
+    });
   });
 });
