@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Ramonmelod/mercadopago-integration/issues"
   },
-  "homepage": "https://github.com/Ramonmelod/mercadopago-integration#readme"
+  "homepage": "https://github.com/Ramonmelod/mercadopago-integration#readme",
+  "dependencies": {
+    "express": "5.1.0"
+  }
 }
