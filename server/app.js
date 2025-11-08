@@ -1,6 +1,7 @@
 const express = require("express");
 const dotEnv = require("dotenv").config(/*{ path: "./.env.development" }*/);
 const { MercadoPagoConfig, Payment } = require("mercadopago");
+const { v4: uuidv4 } = require("uuid");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
@@ -28,7 +29,7 @@ async function getUserInfo() {
 
 const client = new MercadoPagoConfig({
   accessToken: token,
-  options: { timeout: 5000, idempotencyKey: "12345" },
+  options: { timeout: 5000, idempotencyKey: uuidv4() }, //uuid used to identify every transaction
 });
 
 const payment = new Payment(client);
