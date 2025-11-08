@@ -23,7 +23,7 @@ async function getUserInfo() {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("❌ Falha ao buscar dados:", error.messamercadopagoge);
+    console.error("❌ Falha ao buscar dados:", error);
   }
 }
 
