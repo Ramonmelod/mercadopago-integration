@@ -1,7 +1,8 @@
 const express = require("express");
 const dotEnv = require("dotenv").config(/*{ path: "./.env.development" }*/);
+const { MercadoPagoConfig, Payment } = require("mercadopago");
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 
 async function getUserInfo() {
@@ -21,10 +22,52 @@ async function getUserInfo() {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("❌ Falha ao buscar dados:", error.message);
+    console.error("❌ Falha ao buscar dados:", error.messamercadopagoge);
   }
 }
 
+const client = new MercadoPagoConfig({
+  accessToken: token,
+  options: { timeout: 5000, idempotencyKey: "12345" },
+});
+
+const payment = new Payment(client);
+
+app.get("/create-pix", async (req, res) => {
+  try {
+    const body = {
+      transaction_amount: 0.01,
+      description: "E-book Frutos Feito à Mão",
+      payment_method_id: "pix",
+      payer: {
+        email: "ramonmelo.com@gmail.com",
+        first_name: "Ramon",
+      },
+    };
+
+    const response = await payment.create({ body });
+    console.log("🟢 Resposta completa do Mercado Pago:");
+    console.log(JSON.stringify(response, null, 2));
+
+    const pixInfo = response?.point_of_interaction?.transaction_data;
+
+    if (pixInfo?.qr_code && pixInfo?.qr_code_base64) {
+      return res.json({
+        message: "✅ Pagamento PIX criado com sucesso!",
+        qr_code: pixInfo.qr_code,
+        qr_code_base64: pixInfo.qr_code_base64,
+        ticket_url: pixInfo.ticket_url,
+      });
+    } else {
+      throw new Error(
+        "❌ Pagamento criado sem dados de PIX. Verifique as credenciais e permissões da conta."
+      );
+    }
+  } catch (error) {
+    console.error("❌ Erro ao criar pagamento PIX:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 app.get("/users/me", async (req, res) => {
   const data = await getUserInfo();
   res.setHeader("Content-Type", "application/json");
