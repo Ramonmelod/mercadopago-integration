@@ -5,6 +5,9 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
+const cors = require("cors");
+app.use(cors());
+app.use(express.json());
 
 async function getUserInfo() {
   try {
@@ -34,21 +37,21 @@ const client = new MercadoPagoConfig({
 
 const payment = new Payment(client);
 
-app.get("/create-pix", async (req, res) => {
+app.post("/create-pix", async (req, res) => {
   try {
+    const name = req.body.name ? req.body.name : "querida(o) cliente";
     const body = {
       transaction_amount: 0.01,
       description: "E-book Frutos Feito à Mão",
       payment_method_id: "pix",
       payer: {
-        email: "ramonmelo.com@gmail.com",
-        first_name: "Ramon",
+        email: req.body.email,
+        first_name: name,
       },
     };
 
     const response = await payment.create({ body });
-    console.log("🟢 Resposta completa do Mercado Pago:");
-    console.log(JSON.stringify(response, null, 2));
+    //console.log(JSON.stringify(response, null, 2));
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
 
