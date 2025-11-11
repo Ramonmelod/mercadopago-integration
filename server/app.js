@@ -41,6 +41,22 @@ const client = new MercadoPagoConfig({
 
 const payment = new Payment(client);
 
+app.get("/", (req, res) => {
+  res
+    .status(403)
+    .set({
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-XSS-Protection": "1; mode=block"
+    })
+    .json({
+      error: "Access forbidden",
+      message: "This endpoint is restricted. Please use authorized routes."
+    });
+});
+
 app.post("/create-pix", async (req, res) => {
   try {
     const name = req.body.name ? req.body.name : "querida(o) cliente";
