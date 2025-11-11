@@ -2,7 +2,12 @@
   "name": "mercadopago-integration",
   "version": "1.0.0",
   "description": "Integration project between the **Frutos Feito à Mão** website and the **Mercado Pago API** using **Node.js**.   The goal is to generate **QR codes for payments** through the `/v1/payments` endpoint and handle **webhook notifications** for payment status updates.",
-  "main": "index.js",
+  "main": "app.js",
+   "engines": {
+
+    "node": "22.x"
+
+  },
   "scripts": {
     "dev": "node server/app.js",
     "test": "jest",
