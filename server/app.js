@@ -1,11 +1,15 @@
-const express = require("express");
-const dotEnv = require("dotenv").config(/*{ path: "./.env.development" }*/);
-const { MercadoPagoConfig, Payment } = require("mercadopago");
-const { v4: uuidv4 } = require("uuid");
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import { v4 as uuidv4 } from "uuid";
+import { MercadoPagoConfig, Payment } from "mercadopago";
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
-const cors = require("cors");
+
+
+dotenv.config();
 app.use(cors());
 app.use(express.json());
 
