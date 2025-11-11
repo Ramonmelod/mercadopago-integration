@@ -3,15 +3,43 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
 import { MercadoPagoConfig, Payment } from "mercadopago";
+import authentication from "../models/authentication.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
+const secret = process.env.MP_WEBHOOK_SECRET;
 
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-dotenv.config();
-app.use(cors());
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,DELETE,OPTIONS"
+    );
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    res.setHeader("Access-Control-Max-Age", "600");
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// 3) JSON body parser (após o preflight handler)
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString(); // guarda o corpo original como string
+    },
+  })
+);
 
 async function getUserInfo() {
   try {
@@ -33,7 +61,6 @@ async function getUserInfo() {
     console.error("❌ Falha ao buscar dados:", error);
   }
 }
-
 const client = new MercadoPagoConfig({
   accessToken: token,
   options: { timeout: 5000, idempotencyKey: uuidv4() }, //uuid used to identify every transaction
@@ -49,11 +76,11 @@ app.get("/", (req, res) => {
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "1; mode=block"
+      "X-XSS-Protection": "1; mode=block",
     })
     .json({
       error: "Access forbidden",
-      message: "This endpoint is restricted. Please use authorized routes."
+      message: "This endpoint is restricted. Please use authorized routes.",
     });
 });
 
@@ -101,26 +128,41 @@ app.get("/users/me", async (req, res) => {
   });
 });
 
-app.post('/webhook/mercadopago', async (req, res) => {
+app.post("/webhook/mercadopago", async (req, res) => {
   try {
-    const { id, type, data } = req.body;
-    console.log('Webhook recebido:', req.body);
+    const isMercadoPago = authentication.verifyMercadoPagoSignature(
+      req,
+      secret
+    );
+    console.log("is mercado Pago? ", isMercadoPago);
 
-    if (type === 'payment') {
+    const { type, data, id } = req.body;
+
+    if (isMercadoPago && type === "payment") {
       const paymentId = data.id;
-      const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}*/`, { //'http://localhost:8080/mock/payments/:id'
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `https://api.mercadopago.com/v1/payments/${paymentId}/`,
+        {
+          //'http://localhost:8080/mock/payments/:id'
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const paymentInfo = await response.json();
-      console.log(`event id: ${id}`)
-      console.log(paymentInfo);
-      console.log("here will be checked the paymentInfo and if everything is ok will be send the email ")
-      
-    }
 
-    res.sendStatus(200); 
+      console.log("urlabaixo:");
+      console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
+      console.log(`event id: ${id}`);
+      console.log(paymentInfo);
+      console.log(
+        "here will be checked the paymentInfo and if everything is ok will be send the email "
+      );
+
+      res.sendStatus(200);  
+    }
+    res.status(403).json({ error: "Not allowed" });
+    
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
@@ -128,41 +170,42 @@ app.post('/webhook/mercadopago', async (req, res) => {
 });
 
 // The endpoint /mock/payments/:id is used only for mocking
-app.get('/mock/payments/:id', (req, res) => {
+app.get("/mock/payments/:id", (req, res) => {
   const paymentId = req.params.id;
 
   // resposta mock (campos principais semelhantes ao /v1/payments do Mercado Pago)
   const mockResponse = {
     id: Number(paymentId) || 123456789,
-    status: 'pending',
-    status_detail: 'pending_waiting_transfer',
+    status: "pending",
+    status_detail: "pending_waiting_transfer",
     transaction_amount: 0.01,
-    currency_id: 'BRL',
+    currency_id: "BRL",
     date_created: new Date().toISOString(),
     date_last_updated: new Date().toISOString(),
-    description: 'Mocked payment for testing',
+    description: "Mocked payment for testing",
     payer: {
-      id: '1657160132',
-      email: 'cliente@example.com',
-      first_name: 'Cliente',
-      last_name: 'Teste',
-      identification: { type: 'CPF', number: '00000000000' }
+      id: "1657160132",
+      email: "cliente@example.com",
+      first_name: "Cliente",
+      last_name: "Teste",
+      identification: { type: "CPF", number: "00000000000" },
     },
-    payment_method_id: 'pix',
-    payment_type_id: 'bank_transfer',
+    payment_method_id: "pix",
+    payment_type_id: "bank_transfer",
     point_of_interaction: {
       transaction_data: {
-        qr_code: '00020126580014br.gov.bcb.pix0136mocked-pix-code-12345678952040000530398654040.015802BR5909TESTE6012Cidade62250521mockpix1323643642636304D675',
+        qr_code:
+          "00020126580014br.gov.bcb.pix0136mocked-pix-code-12345678952040000530398654040.015802BR5909TESTE6012Cidade62250521mockpix1323643642636304D675",
         qr_code_base64:
-          'iVBORw0KGgoAAAANSUhEUgAA...MOCKED_BASE64_IMAGE_DATA...',
-        ticket_url: `https://www.mercadopago.com.br/payments/${paymentId}/ticket?mock=true`
-      }
+          "iVBORw0KGgoAAAANSUhEUgAA...MOCKED_BASE64_IMAGE_DATA...",
+        ticket_url: `https://www.mercadopago.com.br/payments/${paymentId}/ticket?mock=true`,
+      },
     },
     // extras utilitários que podem aparecer na resposta real
     transaction_details: {
       total_paid_amount: 0.01,
-      net_received_amount: 0.01
-    }
+      net_received_amount: 0.01,
+    },
   };
 
   // simular small delay opcional (descomente se quiser)
