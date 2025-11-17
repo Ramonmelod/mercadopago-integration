@@ -58,7 +58,7 @@ async function getUserInfo() {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("❌ Falha ao buscar dados:", error);
+    console.error("❌ Falha ao buscar dados, você adicionou o .ENV?:", error);
   }
 }
 const client = new MercadoPagoConfig({
@@ -123,8 +123,8 @@ app.get("/users/me", async (req, res) => {
   const data = await getUserInfo();
   res.setHeader("Content-Type", "application/json");
   res.status(200).json({
-    first_name: data.first_name,
-    brand_name: data.company?.brand_name,
+    first_name: data?.first_name,
+    brand_name: data?.company?.brand_name,
   });
 });
 
@@ -159,10 +159,9 @@ app.post("/webhook/mercadopago", async (req, res) => {
         "here will be checked the paymentInfo and if everything is ok will be send the email "
       );
 
-      res.sendStatus(200);  
+      res.sendStatus(200);
     }
     res.status(403).json({ error: "Not allowed" });
-    
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
