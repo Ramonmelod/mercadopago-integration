@@ -3,10 +3,8 @@
   "version": "1.0.0",
   "description": "Integration project between the **Frutos Feito à Mão** website and the **Mercado Pago API** using **Node.js**.   The goal is to generate **QR codes for payments** through the `/v1/payments` endpoint and handle **webhook notifications** for payment status updates.",
   "main": "controller.js",
-   "engines": {
-
+  "engines": {
     "node": "22.x"
-
   },
   "scripts": {
     "dev": "node server/controller.js",
@@ -30,9 +28,11 @@
     "dotenv": "17.2.3",
     "express": "5.1.0",
     "mercadopago": "2.10.0",
+    "nodemailer": "7.0.10",
     "uuid": "13.0.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "7.28.5",
     "jest": "30.2.0"
   }
 }
