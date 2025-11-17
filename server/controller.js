@@ -4,11 +4,13 @@ import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import authentication from "../models/authentication.js";
+import email from "../infra/email.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
+const ebookPrice = 0.01; // change to the real price
 
 app.use(
   cors({
@@ -129,39 +131,70 @@ app.get("/users/me", async (req, res) => {
 });
 
 app.post("/webhook/mercadopago", async (req, res) => {
+  //Real event Id: 135112247362
   try {
     const isMercadoPago = authentication.verifyMercadoPagoSignature(
       req,
       secret
     );
     console.log("is mercado Pago? ", isMercadoPago);
-
-    const { type, data, id } = req.body;
-
-    if (isMercadoPago && type === "payment") {
-      const paymentId = data.id;
-      const response = await fetch(
-        `https://api.mercadopago.com/v1/payments/${paymentId}/`,
-        {
-          //'http://localhost:8080/mock/payments/:id'
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const paymentInfo = await response.json();
-
-      console.log("urlabaixo:");
-      console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
-      console.log(`event id: ${id}`);
-      console.log(paymentInfo);
-      console.log(
-        "here will be checked the paymentInfo and if everything is ok will be send the email "
-      );
-
-      res.sendStatus(200);
+    if (!isMercadoPago) {
+      console.log("Requisição não autêntica");
+      return res.sendStatus(401);
     }
-    res.status(403).json({ error: "Not allowed" });
+    const { type, data, id, action } = req.body;
+
+    if (type !== "payment" || action !== "payment.updated") {
+      return res.sendStatus(200);
+    }
+
+    const paymentId = data.id;
+    const response = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}/`, //'http://localhost:8080/mock/payments/:id'
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log(`event id: ${id}`);
+    console.log("consultando url abaixo:");
+    console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
+    const paymentInfo = await response.json();
+
+    // avoid e-mail to payments test/sandbox
+    if (!paymentInfo.live_mode) {
+      console.log("A requisição recebida foi de teste");
+      return res.sendStatus(200);
+    }
+    const isApproved =
+      paymentInfo.status === "approved" &&
+      paymentInfo.status_detail === "accredited" &&
+      paymentInfo.transaction_amount === ebookPrice && // valor correto
+      paymentInfo.collector_id === 347508936;
+
+    const status = paymentInfo.status;
+    const status_detail = paymentInfo.status_detail;
+    console.log(status);
+    console.log(status_detail);
+
+    //make the duplicity control
+
+    if (isApproved) {
+      console.log("pagamento confirmado");
+      await email.send({
+        from: "contato@frutosfeitoamao.com.br",
+        to: "contato@ramonmelo.com.br",
+        subject: "teste assunto vindo da api frutos",
+        text: `Teste de corpo vinda da api da frutos`,
+      });
+    }
+
+    console.log(paymentInfo);
+
+    res.sendStatus(200);
+    return;
   } catch (error) {
     console.error(error);
     res.sendStatus(500);

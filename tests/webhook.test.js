@@ -1,8 +1,7 @@
-const crypto = require("crypto")
-const dotenv = require("dotenv")
+import crypto from "crypto";
+import dotenv from "dotenv";
 //const authentication = require("../models/authentication.js")
 dotenv.config();
-
 
 describe("POST /webhook/mercadopago", () => {
   test("should return 403 when signature is invalid or missing - invalid signature", async () => {
@@ -20,11 +19,11 @@ describe("POST /webhook/mercadopago", () => {
 
     const body = await response.json();
     expect(body).toEqual({
-      error: "Not allowed"
+      error: "Not allowed",
     });
   });
-  
-   test("should return 200 and { ok: true }", async () => {
+
+  test("should return 200 and { ok: true }", async () => {
     const secret = process.env.MP_WEBHOOK_SECRET;
     // Campos simulados da assinatura
     const id = "123456";
@@ -49,8 +48,8 @@ describe("POST /webhook/mercadopago", () => {
       body: JSON.stringify({
         type: "payment",
         action: "payment.created",
-        data: { id: "123456789" }
-      })
+        data: { id: "123456789" },
+      }),
     });
 
     expect(response.status).toBe(200);
