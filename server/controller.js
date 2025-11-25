@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import authentication from "../models/authentication.js";
 import email from "../infra/email.js";
+import paymentRepository from "../service/paymentRepository.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -168,6 +169,15 @@ app.post("/webhook/mercadopago", async (req, res) => {
       console.log("A requisição recebida foi de teste");
       return res.sendStatus(200);
     }
+
+    await paymentRepository.markPaymentAsProcessed(id); //record redis
+    const searchedId = await paymentRepository.wasPaymentProcessed(id); // query to redis
+
+    if (searchedId) {
+      console.log("A requisição já recebida e processada anteriormente");
+      return res.sendStatus(200);
+    }
+
     const isApproved =
       paymentInfo.status === "approved" &&
       paymentInfo.status_detail === "accredited" &&
@@ -178,8 +188,6 @@ app.post("/webhook/mercadopago", async (req, res) => {
     const status_detail = paymentInfo.status_detail;
     console.log(status);
     console.log(status_detail);
-
-    //make the duplicity control
 
     if (isApproved) {
       console.log("pagamento confirmado");
@@ -249,3 +257,5 @@ app.get("/mock/payments/:id", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
+
+//https://mercadopago-integration-three.vercel.app/webhook/mercadopago

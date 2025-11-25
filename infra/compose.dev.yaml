@@ -5,3 +5,14 @@ services:
     ports:
       - "1025:1025"
       - "1080:1080"
+  redis:
+    container_name: "redis-dev"
+    image: "redis:8.4.0-alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:    
