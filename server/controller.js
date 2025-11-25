@@ -254,6 +254,44 @@ app.get("/mock/payments/:id", (req, res) => {
   res.json(mockResponse);
 });
 
+app.post("/webhook/ses", async (req, res) => {
+  try {
+    const messageType = req.headers["x-amz-sns-message-type"];
+    const body = req.body;
+
+    if (messageType === "SubscriptionConfirmation") {
+      console.log("SNS wants confirmation:", body.SubscribeURL);
+
+      // você precisa visitar essa URL UMA VEZ
+      // OU fazer isso automaticamente:
+      await fetch(body.SubscribeURL);
+      return res.sendStatus(200);
+    }
+
+    if (messageType === "Notification") {
+      const message = JSON.parse(body.Message);
+
+      if (message.notificationType === "Bounce") {
+        console.log("📮 Bounce:", message.bounce.bouncedRecipients);
+      }
+
+      if (message.notificationType === "Complaint") {
+        console.log("⚠️ Complaint:", message.complaint.complainedRecipients);
+      }
+
+      if (message.notificationType === "Delivery") {
+        console.log("✅ Delivery:", message.delivery);
+      }
+
+      return res.sendStatus(200);
+    }
+
+    res.sendStatus(400);
+  } catch (error) {
+    console.error("SNS webhook error:", error);
+    res.sendStatus(500);
+  }
+});
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
