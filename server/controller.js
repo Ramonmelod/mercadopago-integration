@@ -170,13 +170,13 @@ app.post("/webhook/mercadopago", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    await paymentRepository.markPaymentAsProcessed(id); //record redis
     const searchedId = await paymentRepository.wasPaymentProcessed(id); // query to redis
 
     if (searchedId) {
       console.log("A requisição já recebida e processada anteriormente");
       return res.sendStatus(200);
     }
+    await paymentRepository.markPaymentAsProcessed(id); //record redis
 
     const isApproved =
       paymentInfo.status === "approved" &&
