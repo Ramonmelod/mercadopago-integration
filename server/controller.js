@@ -34,6 +34,7 @@ app.use((req, res, next) => {
   }
   next();
 });
+app.use("/webhook/ses", express.text({ type: "*/*" }));
 
 // 3) JSON body parser (após o preflight handler)
 app.use(
@@ -257,35 +258,54 @@ app.get("/mock/payments/:id", (req, res) => {
 app.post("/webhook/ses", async (req, res) => {
   try {
     const messageType = req.headers["x-amz-sns-message-type"];
-    const body = req.body;
+    const bodyString = req.body; // vem como string
+    console.log("------- bodyString ------");
+    console.log(bodyString);
 
+    // 1. SubscriptionConfirmation
     if (messageType === "SubscriptionConfirmation") {
-      console.log("SNS wants confirmation:", body.SubscribeURL);
+      const bodyJson = JSON.parse(bodyString);
+      console.log("------- bodyJson ------");
+      console.log(bodyJson);
 
-      // você precisa visitar essa URL UMA VEZ
-      // OU fazer isso automaticamente:
-      await fetch(body.SubscribeURL);
+      console.log("SNS wants confirmation:", bodyJson.SubscribeURL);
+
+      const response = await fetch(bodyJson.SubscribeURL); // Confirma no SNS
+      console.log(response);
       return res.sendStatus(200);
     }
 
+    // 2. Notification (raw SES messages)
     if (messageType === "Notification") {
-      const message = JSON.parse(body.Message);
+      const bodyJson = JSON.parse(bodyString);
+      console.log("------- bodyJson ------");
+      console.log(bodyJson);
 
-      if (message.notificationType === "Bounce") {
-        console.log("📮 Bounce:", message.bounce.bouncedRecipients);
-      }
+      const message = JSON.parse(bodyJson.Message); // <- O SES REAL
+      console.log("------- message (SES real) ------");
+      console.log(message);
 
-      if (message.notificationType === "Complaint") {
-        console.log("⚠️ Complaint:", message.complaint.complainedRecipients);
-      }
+      switch (message.notificationType) {
+        case "Bounce":
+          console.log("📮 Bounce:", message.bounce.bouncedRecipients);
+          break;
 
-      if (message.notificationType === "Delivery") {
-        console.log("✅ Delivery:", message.delivery);
+        case "Complaint":
+          console.log("⚠️ Complaint:", message.complaint.complainedRecipients);
+          break;
+
+        case "Delivery":
+          console.log("📬 Delivery:", message.delivery);
+          break;
+
+        default:
+          console.log("Tipo de notificação SES desconhecido:", message);
       }
 
       return res.sendStatus(200);
     }
 
+    // Caso não tenha o header do SNS
     res.sendStatus(400);
   } catch (error) {
     console.error("SNS webhook error:", error);
@@ -296,4 +316,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
 
-//https://mercadopago-integration-three.vercel.app/webhook/mercadopago
+//https://mercadopago-integration-three.vercel.app/webhook/ses
+//aws sns topic/subscription service
