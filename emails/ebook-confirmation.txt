@@ -1,0 +1,31 @@
+ Olá, tudo bem?
+
+Este é um e-mail de teste enviado para confirmar que nosso serviço de entrega digital está funcionando corretamente.
+
+Aqui está o link para acessar o e-book Frutos Feito à Mão:
+
+👉 {{link_de_download}}
+
+Caso o link não funcione ou você tenha qualquer dúvida, basta responder este e-mail.
+Estamos aqui para ajudar.
+📘 Porque você está recebendo este e-mail?
+
+Você solicitou o envio de um e-book digital no site Frutos Feito à Mão.
+Este e-mail contém apenas informações transacionais relacionadas à sua solicitação.
+📍 Informações da empresa
+
+Frutos Feito à Mão – Produtos Digitais
+Endereço: [insira endereço físico]
+Site: https://frutosfeitoamao.com.br
+Suporte: contato@frutosfeitoamao.com.br
+❌ Não deseja receber mais e-mails como este?
+
+Se você preferir não receber mensagens futuras relacionadas às suas compras,
+pode solicitar a remoção através deste link:
+
+👉 https://mercadopago-integration-three.vercel.app/unsubscribe
+
+Ou simplesmente responda este e-mail com a palavra “unsubscribe”.
+
+Obrigado pela confiança 💛
+Equipe Frutos Feito à Mão

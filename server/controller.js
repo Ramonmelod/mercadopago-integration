@@ -6,6 +6,7 @@ import { MercadoPagoConfig, Payment } from "mercadopago";
 import authentication from "../models/authentication.js";
 import email from "../infra/email.js";
 import paymentRepository from "../service/paymentRepository.js";
+import emailTemplate from "../utils/emailTemplate.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -192,12 +193,15 @@ app.post("/webhook/mercadopago", async (req, res) => {
 
     if (isApproved) {
       console.log("pagamento confirmado");
-      await email.send({
+      const emailBody = emailTemplate.loadTemplate("ebook-confirmation.txt");
+      console.log(emailBody);
+      const response = await email.send({
         from: "contato@frutosfeitoamao.com.br",
         to: "contato@ramonmelo.com.br",
-        subject: "teste assunto vindo da api frutos",
-        text: `Teste de corpo vinda da api da frutos`,
+        subject: "Confirmação de envio – Seu e-book Frutos Feito à Mão",
+        text: emailBody,
       });
+      console.log(response);
     }
 
     console.log(paymentInfo);
@@ -319,7 +323,6 @@ app.get("/unsubscribe", (req, res) => {
     const email = req.query.email; //later treat undefined
 
     console.log("Unsubscribe solicitado para:", email);
-
     return res.status(200).send("OK");
   } catch (error) {
     console.log(error);
