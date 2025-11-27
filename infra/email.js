@@ -13,13 +13,11 @@ const transporter = nodemailer.createTransport({
 });
 
 async function send(mailOptions) {
-  console.log(process.env.NODE_ENV);
-  console.log(process.env.EMAIL_SMTP_PORT);
-  console.log(mailOptions);
-  await transporter.sendMail(mailOptions);
+  const response = await transporter.sendMail(mailOptions);
   if (transporter.close) {
     transporter.close();
   }
+  return response;
 }
 
 const email = {
