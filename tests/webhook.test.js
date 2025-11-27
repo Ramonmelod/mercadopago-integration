@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 describe("POST /webhook/mercadopago", () => {
-  test("should return 403 when signature is invalid or missing - invalid signature", async () => {
+  test("should return 401 when signature is invalid or missing - invalid signature", async () => {
     const response = await fetch("http://localhost:8080/webhook/mercadopago", {
       method: "POST",
       headers: {
@@ -15,7 +15,7 @@ describe("POST /webhook/mercadopago", () => {
       }),
     });
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
 
     const body = await response.json();
     expect(body).toEqual({
@@ -59,4 +59,4 @@ describe("POST /webhook/mercadopago", () => {
   });
 });
 // make a test with  the correct secret key
-//"should return 403 when signature is invalid or missing - invalid signature"
+//"should return 401 when signature is invalid or missing - invalid signature"
