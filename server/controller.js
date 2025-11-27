@@ -256,6 +256,7 @@ app.get("/mock/payments/:id", (req, res) => {
 });
 
 app.post("/webhook/ses", async (req, res) => {
+  //available to the SES from aws
   try {
     const messageType = req.headers["x-amz-sns-message-type"];
     const bodyString = req.body; // vem como string
@@ -310,6 +311,19 @@ app.post("/webhook/ses", async (req, res) => {
   } catch (error) {
     console.error("SNS webhook error:", error);
     res.sendStatus(500);
+  }
+});
+
+app.get("/unsubscribe", (req, res) => {
+  try {
+    const email = req.query.email; //later treat undefined
+
+    console.log("Unsubscribe solicitado para:", email);
+
+    return res.status(200).send("OK");
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 });
 app.listen(PORT, () => {
