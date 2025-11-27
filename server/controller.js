@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
-const ebookPrice = 0.01; // change to the real price
+const ebookPrice = 1.0; // change to the real price
 
 app.use(
   cors({
@@ -93,7 +93,7 @@ app.post("/create-pix", async (req, res) => {
   try {
     const name = req.body.name ? req.body.name : "querida(o) cliente";
     const body = {
-      transaction_amount: 0.01,
+      transaction_amount: ebookPrice,
       description: "E-book Frutos Feito à Mão",
       payment_method_id: "pix",
       payer: {
@@ -106,6 +106,8 @@ app.post("/create-pix", async (req, res) => {
     //console.log(JSON.stringify(response, null, 2));
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
+
+    await paymentRepository.saveCustomerEmail(response.id, req.body.email);
 
     if (pixInfo?.qr_code && pixInfo?.qr_code_base64) {
       return res.json({
@@ -161,12 +163,15 @@ app.post("/webhook/mercadopago", async (req, res) => {
       }
     );
 
+    const clientEmail = await paymentRepository.getCustomerEmail(paymentId);
+    console.log(clientEmail);
+
     console.log(`event id: ${id}`);
     console.log("consultando url abaixo:");
     console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
     const paymentInfo = await response.json();
 
-    // avoid e-mail to payments test/sandbox
+    // avoid e-mail to payments test/sandbox+
     if (!paymentInfo.live_mode) {
       console.log("A requisição recebida foi de teste");
       return res.sendStatus(200);
@@ -197,7 +202,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
       console.log(emailBody);
       const response = await email.send({
         from: "contato@frutosfeitoamao.com.br",
-        to: "contato@ramonmelo.com.br",
+        to: clientEmail,
         subject: "Confirmação de envio – Seu e-book Frutos Feito à Mão",
         text: emailBody,
       });
