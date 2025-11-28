@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
-const ebookPrice = 1.0; // change to the real price
+const ebookPrice = 0.01; // change to the real price
 
 app.use(
   cors({
@@ -103,15 +103,16 @@ app.post("/create-pix", async (req, res) => {
     };
 
     const response = await payment.create({ body });
-    //console.log(JSON.stringify(response, null, 2));
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
 
     await paymentRepository.saveCustomerEmail(response.id, req.body.email);
 
     if (pixInfo?.qr_code && pixInfo?.qr_code_base64) {
-      return res.json({
+      return res.status(201).json({
         message: "✅ Pagamento PIX criado com sucesso!",
+        payment_id: response.id,
+        status: response.status,
         qr_code: pixInfo.qr_code,
         qr_code_base64: pixInfo.qr_code_base64,
         ticket_url: pixInfo.ticket_url,
