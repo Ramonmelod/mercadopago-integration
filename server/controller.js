@@ -1,12 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { v4 as uuidv4 } from "uuid";
-import { MercadoPagoConfig, Payment } from "mercadopago";
 import authentication from "../models/authentication.js";
 import email from "../infra/email.js";
 import paymentRepository from "../service/paymentRepository.js";
 import emailTemplate from "../utils/emailTemplate.js";
+import paymentService from "../service/paymentService.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -66,13 +65,6 @@ async function getUserInfo() {
     console.error("❌ Falha ao buscar dados, você adicionou o .ENV?:", error);
   }
 }
-const client = new MercadoPagoConfig({
-  accessToken: token,
-  options: { timeout: 5000, idempotencyKey: uuidv4() }, //uuid used to identify every transaction
-});
-
-const payment = new Payment(client);
-
 app.get("/", (req, res) => {
   res
     .status(403)
@@ -91,22 +83,15 @@ app.get("/", (req, res) => {
 
 app.post("/create-pix", async (req, res) => {
   try {
-    const name = req.body.name ? req.body.name : "querida(o) cliente";
-    const body = {
-      transaction_amount: ebookPrice,
-      description: "E-book Frutos Feito à Mão",
-      payment_method_id: "pix",
-      payer: {
-        email: req.body.email,
-        first_name: name,
-      },
-    };
-
-    const response = await payment.create({ body });
+    const description = "E-book Frutos Feito à Mão";
+    const response = await paymentService.createPix(
+      req,
+      ebookPrice,
+      description,
+      token
+    );
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
-
-    await paymentRepository.saveCustomerEmail(response.id, req.body.email);
 
     if (pixInfo?.qr_code && pixInfo?.qr_code_base64) {
       return res.status(201).json({
@@ -118,9 +103,7 @@ app.post("/create-pix", async (req, res) => {
         ticket_url: pixInfo.ticket_url,
       });
     } else {
-      throw new Error(
-        "❌ Pagamento criado sem dados de PIX. Verifique as credenciais e permissões da conta."
-      );
+      res.status(500).json({ error: error.message });
     }
   } catch (error) {
     console.error("❌ Erro ao criar pagamento PIX:", error);

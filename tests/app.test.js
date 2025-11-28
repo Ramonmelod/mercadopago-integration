@@ -18,8 +18,8 @@ describe("requests to mercado pago API", () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "ramonmelod@gmail.com",
-        name: "anonimo",
+        email: "ramonmelo.com@gmail.com",
+        name: "Ramon",
       }),
     });
 
