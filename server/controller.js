@@ -6,6 +6,7 @@ import email from "../infra/email.js";
 import paymentRepository from "../service/paymentRepository.js";
 import emailTemplate from "../utils/emailTemplate.js";
 import paymentService from "../service/paymentService.js";
+import userService from "../service/userService.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -36,7 +37,7 @@ app.use((req, res, next) => {
 });
 app.use("/webhook/ses", express.text({ type: "*/*" }));
 
-// 3) JSON body parser (após o preflight handler)
+// 3) JSON body parser (after preflight handler)
 app.use(
   express.json({
     verify: (req, res, buf) => {
@@ -45,26 +46,6 @@ app.use(
   })
 );
 
-async function getUserInfo() {
-  try {
-    const response = await fetch("https://api.mercadopago.com/users/me", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("❌ Falha ao buscar dados, você adicionou o .ENV?:", error);
-  }
-}
 app.get("/", (req, res) => {
   res
     .status(403)
@@ -111,12 +92,17 @@ app.post("/create-pix", async (req, res) => {
   }
 });
 app.get("/users/me", async (req, res) => {
-  const data = await getUserInfo();
-  res.setHeader("Content-Type", "application/json");
-  res.status(200).json({
-    first_name: data?.first_name,
-    brand_name: data?.company?.brand_name,
-  });
+  try {
+    const data = await userService.getUserInfo(token);
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json({
+      first_name: data?.first_name,
+      brand_name: data?.company?.brand_name,
+    });
+  } catch (error) {
+    console.error("❌ Erro ao consultar dados do usuário:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/webhook/mercadopago", async (req, res) => {
