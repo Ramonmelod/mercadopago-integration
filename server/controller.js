@@ -62,6 +62,41 @@ app.get("/", (req, res) => {
     });
 });
 
+app.get("/users/me", async (req, res) => {
+  try {
+    const data = await userService.getUserInfo(token);
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json({
+      first_name: data?.first_name,
+      brand_name: data?.company?.brand_name,
+    });
+  } catch (error) {
+    console.error("❌ Erro ao consultar dados do usuário:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/unsubscribe", (req, res) => {
+  try {
+    const email = req.query.email;
+
+    if (!email) {
+      console.log("Unsubscribe chamado sem parâmetro ?email=");
+      return res.status(400).json({
+        success: false,
+        error: "Missing email parameter",
+        message: "Use /unsubscribe?email=seuemail@dominio.com",
+      });
+    }
+
+    console.log("Unsubscribe solicitado para:", email);
+
+    return res.status(200).send("OK");
+  } catch (error) {
+    console.error("Erro no /unsubscribe:", error);
+    return res.status(500).send("Internal server error");
+  }
+});
+
 app.post("/create-pix", async (req, res) => {
   try {
     const description = "E-book Frutos Feito à Mão";
@@ -88,19 +123,6 @@ app.post("/create-pix", async (req, res) => {
     }
   } catch (error) {
     console.error("❌ Erro ao criar pagamento PIX:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-app.get("/users/me", async (req, res) => {
-  try {
-    const data = await userService.getUserInfo(token);
-    res.setHeader("Content-Type", "application/json");
-    res.status(200).json({
-      first_name: data?.first_name,
-      brand_name: data?.company?.brand_name,
-    });
-  } catch (error) {
-    console.error("❌ Erro ao consultar dados do usuário:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -191,52 +213,6 @@ app.post("/webhook/mercadopago", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-// The endpoint /mock/payments/:id is used only for mocking
-app.get("/mock/payments/:id", (req, res) => {
-  const paymentId = req.params.id;
-
-  // resposta mock (campos principais semelhantes ao /v1/payments do Mercado Pago)
-  const mockResponse = {
-    id: Number(paymentId) || 123456789,
-    status: "pending",
-    status_detail: "pending_waiting_transfer",
-    transaction_amount: 0.01,
-    currency_id: "BRL",
-    date_created: new Date().toISOString(),
-    date_last_updated: new Date().toISOString(),
-    description: "Mocked payment for testing",
-    payer: {
-      id: "1657160132",
-      email: "cliente@example.com",
-      first_name: "Cliente",
-      last_name: "Teste",
-      identification: { type: "CPF", number: "00000000000" },
-    },
-    payment_method_id: "pix",
-    payment_type_id: "bank_transfer",
-    point_of_interaction: {
-      transaction_data: {
-        qr_code:
-          "00020126580014br.gov.bcb.pix0136mocked-pix-code-12345678952040000530398654040.015802BR5909TESTE6012Cidade62250521mockpix1323643642636304D675",
-        qr_code_base64:
-          "iVBORw0KGgoAAAANSUhEUgAA...MOCKED_BASE64_IMAGE_DATA...",
-        ticket_url: `https://www.mercadopago.com.br/payments/${paymentId}/ticket?mock=true`,
-      },
-    },
-    // extras utilitários que podem aparecer na resposta real
-    transaction_details: {
-      total_paid_amount: 0.01,
-      net_received_amount: 0.01,
-    },
-  };
-
-  // simular small delay opcional (descomente se quiser)
-  // setTimeout(() => res.json(mockResponse), 300);
-
-  res.json(mockResponse);
-});
-
 app.post("/webhook/ses", async (req, res) => {
   //available to the SES from aws
   try {
@@ -296,27 +272,6 @@ app.post("/webhook/ses", async (req, res) => {
   }
 });
 
-app.get("/unsubscribe", (req, res) => {
-  try {
-    const email = req.query.email;
-
-    if (!email) {
-      console.log("Unsubscribe chamado sem parâmetro ?email=");
-      return res.status(400).json({
-        success: false,
-        error: "Missing email parameter",
-        message: "Use /unsubscribe?email=seuemail@dominio.com",
-      });
-    }
-
-    console.log("Unsubscribe solicitado para:", email);
-
-    return res.status(200).send("OK");
-  } catch (error) {
-    console.error("Erro no /unsubscribe:", error);
-    return res.status(500).send("Internal server error");
-  }
-});
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
