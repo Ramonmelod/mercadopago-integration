@@ -27,12 +27,15 @@
   },
   "homepage": "https://github.com/Ramonmelod/mercadopago-integration#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "3.940.0",
+    "@aws-sdk/s3-request-presigner": "3.940.0",
     "cors": "2.8.5",
     "dotenv": "17.2.3",
     "express": "5.1.0",
     "mercadopago": "2.10.0",
     "nodemailer": "7.0.10",
     "redis": "5.10.0",
+    "tslib": "2.8.1",
     "uuid": "13.0.0"
   },
   "devDependencies": {
