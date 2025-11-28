@@ -3,8 +3,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import r2 from "../infra/r2client.js";
 import { configDotenv } from "dotenv";
 configDotenv();
+const acessEbookTime = process.env.R2_LINK_TIME;
 
-async function generateSignedUrl(key, expiresInSeconds = 3600) {
+async function generateSignedUrl(key, expiresInSeconds = acessEbookTime) {
   const command = new GetObjectCommand({
     Bucket: process.env.R2_BUCKET_NAME,
     Key: key,

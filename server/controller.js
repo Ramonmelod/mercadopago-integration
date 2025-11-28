@@ -7,6 +7,7 @@ import paymentRepository from "../service/paymentRepository.js";
 import emailTemplate from "../utils/emailTemplate.js";
 import paymentService from "../service/paymentService.js";
 import userService from "../service/userService.js";
+import signedUrlService from "../service/signedUrlService.js";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -187,6 +188,11 @@ app.post("/webhook/mercadopago", async (req, res) => {
     const status_detail = paymentInfo.status_detail;
     console.log(status);
     console.log(status_detail);
+
+    const linkEbook = await signedUrlService.generateSignedUrl(
+      "Ebook iniciante pingente de natal.pdf"
+    );
+    console.log(linkEbook);
 
     if (isApproved) {
       console.log("pagamento confirmado");
