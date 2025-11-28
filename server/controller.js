@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
-const ebookPrice = 0.01; // change to the real price
+const ebookPrice = Number(process.env.EBOOK_PRICE);
 
 app.use(
   cors({
