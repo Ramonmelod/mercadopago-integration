@@ -200,13 +200,16 @@ app.post("/webhook/mercadopago", async (req, res) => {
       console.log("pagamento confirmado");
       const emailBody = emailTemplate.loadTemplate("ebook-confirmation.txt");
       console.log(emailBody);
-      const response = await email.send({
+      const info = await email.send({
         from: "contato@frutosfeitoamao.com.br",
         to: clientEmail,
         subject: "Confirmação de envio – Seu e-book Frutos Feito à Mão",
         text: emailBody,
       });
-      console.log(response);
+      console.log(info);
+      if (info.rejected.length > 0) {
+        console.error("⚠️ Email rejeitado:", info.rejected);
+      }
     }
 
     console.log(paymentInfo);
@@ -325,13 +328,23 @@ app.post("/webhook/ses", async (req, res) => {
 
 app.get("/unsubscribe", (req, res) => {
   try {
-    const email = req.query.email; //later treat undefined
+    const email = req.query.email;
+
+    if (!email) {
+      console.log("Unsubscribe chamado sem parâmetro ?email=");
+      return res.status(400).json({
+        success: false,
+        error: "Missing email parameter",
+        message: "Use /unsubscribe?email=seuemail@dominio.com",
+      });
+    }
 
     console.log("Unsubscribe solicitado para:", email);
+
     return res.status(200).send("OK");
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.error("Erro no /unsubscribe:", error);
+    return res.status(500).send("Internal server error");
   }
 });
 app.listen(PORT, () => {
