@@ -1,7 +1,7 @@
 Olá, {{nome}}, tudo bem?
 
 Obrigado pela sua compra! 🧡
-Seu acesso ao e-book *Frutos Feito à Mão* já está disponível.
+Seu acesso ao e-book Frutos Feito à Mão já está disponível.
 
 Aqui está o link seguro para fazer o download:
 
