@@ -11,6 +11,7 @@ import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
 dotenv.config();
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
