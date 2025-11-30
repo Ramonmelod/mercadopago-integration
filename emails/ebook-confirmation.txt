@@ -1,31 +1,37 @@
- Olá, tudo bem?
+Olá, {{nome}}, tudo bem?
 
-Este é um e-mail de teste enviado para confirmar que nosso serviço de entrega digital está funcionando corretamente.
+Obrigado pela sua compra! 🧡
+Seu acesso ao e-book *Frutos Feito à Mão* já está disponível.
 
-Aqui está o link para acessar o e-book Frutos Feito à Mão:
+Aqui está o link seguro para fazer o download:
 
 👉 {{link_de_download}}
 
-Caso o link não funcione ou você tenha qualquer dúvida, basta responder este e-mail.
-Estamos aqui para ajudar.
-📘 Porque você está recebendo este e-mail?
+⏳ Este link ficará disponível por: {{validade_do_link}} horas.
 
-Você solicitou o envio de um e-book digital no site Frutos Feito à Mão.
-Este e-mail contém apenas informações transacionais relacionadas à sua solicitação.
+Caso o link não funcione ou você tenha qualquer dúvida, basta responder este e-mail.
+Estamos aqui para ajudar sempre que precisar.
+
+📘 Por que você está recebendo este e-mail?
+
+Você realizou a compra de um e-book digital no site Frutos Feito à Mão.
+Este e-mail é totalmente transacional e contém as informações necessárias
+para você acessar o produto adquirido.
+
 📍 Informações da empresa
 
-Frutos Feito à Mão – Produtos Digitais
-Endereço: [insira endereço físico]
-Site: https://frutosfeitoamao.com.br
-Suporte: contato@frutosfeitoamao.com.br
-❌ Não deseja receber mais e-mails como este?
+Frutos Feito à Mão – Produtos Digitais  
+Site: https://frutosfeitoamao.com.br  
+Suporte: contato@frutosfeitoamao.com.br  
 
-Se você preferir não receber mensagens futuras relacionadas às suas compras,
-pode solicitar a remoção através deste link:
+❌ Deseja parar de receber e-mails como este?
 
-👉 https://mercadopago-integration-three.vercel.app/unsubscribe
+Se preferir não receber mensagens futuras relacionadas às suas compras,
+basta solicitar a remoção através deste link:
 
-Ou simplesmente responda este e-mail com a palavra “unsubscribe”.
+👉 https://mercadopago-integration-three.vercel.app/unsubscribe?email={{email}}
 
-Obrigado pela confiança 💛
+Ou, se preferir, responda este e-mail com a palavra “unsubscribe”.
+
+Obrigado pela confiança 💛  
 Equipe Frutos Feito à Mão

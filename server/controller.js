@@ -192,11 +192,17 @@ app.post("/webhook/mercadopago", async (req, res) => {
     const linkEbook = await signedUrlService.generateSignedUrl(
       "Ebook iniciante pingente de natal.pdf"
     );
-    console.log(linkEbook);
 
     if (isApproved) {
       console.log("pagamento confirmado");
-      const emailBody = emailTemplate.loadTemplate("ebook-confirmation.txt");
+      const emailData = {
+        nome: "Cliente",
+        link_de_download: linkEbook,
+        validade_do_link: process.env.R2_LINK_TIME / 3600,
+        email: clientEmail,
+      };
+      const template = emailTemplate.loadTemplate("ebook-confirmation.txt");
+      const emailBody = emailTemplate.applyVariables(template, emailData);
       console.log(emailBody);
       const info = await email.send({
         from: "contato@frutosfeitoamao.com.br",

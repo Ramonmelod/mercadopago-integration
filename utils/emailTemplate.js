@@ -8,7 +8,7 @@ function loadTemplate(filename) {
 
 function applyVariables(template, variables) {
   return template.replace(/{{\s*([\w]+)\s*}}/g, (match, key) => {
-    return variables[key] ?? match; // se não encontrar, mantém o texto
+    return variables[key] ?? match; // if does not find, keep the text
   });
 }
 const emailTemplate = {
