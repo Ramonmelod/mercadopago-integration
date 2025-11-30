@@ -97,6 +97,64 @@ app.get("/unsubscribe", (req, res) => {
     return res.status(500).send("Internal server error");
   }
 });
+app.get("/payments/:id/status", async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+    console.log(paymentId);
+
+    if (!paymentId) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing payment ID",
+      });
+    }
+
+    // Mercado Pago request
+    const response = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch payment info from Mercado Pago",
+      });
+    }
+
+    const paymentInfo = await response.json();
+
+    // Status start with a pending value
+    let normalizedStatus = "pending";
+
+    if (paymentInfo.status === "approved") {
+      normalizedStatus = "approved";
+    } else if (paymentInfo.status === "rejected") {
+      normalizedStatus = "rejected";
+    } else if (paymentInfo.status === "cancelled") {
+      normalizedStatus = "cancelled";
+    }
+
+    return res.status(200).json({
+      success: true,
+      payment_id: paymentId,
+      status: normalizedStatus,
+      raw_status: paymentInfo.status,
+      status_detail: paymentInfo.status_detail, //for debuging
+    });
+  } catch (error) {
+    console.error("❌ ERRO EM GET /payments/:id/status:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      details: error.message,
+    });
+  }
+});
 
 app.post("/create-pix", async (req, res) => {
   try {
