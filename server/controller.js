@@ -11,7 +11,7 @@ import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
 dotenv.config();
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", 1); //enable the trust-proxy
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
@@ -19,14 +19,14 @@ const ebookPrice = Number(process.env.EBOOK_PRICE);
 
 const pixLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 2, // limit of requests per minute
+  max: 4, // limit of requests per minute
   message: {
     error: "Too many requests. Please try again later.",
   },
 });
 const statusLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 min
-  max: 2,
+  windowMs: 180 * 1000, // 3 min
+  max: 63,
   message: "Muitas consultas de status.",
 });
 app.use(["/create-pix"], pixLimiter);
@@ -365,3 +365,17 @@ app.listen(PORT, () => {
 
 //https://mercadopago-integration-three.vercel.app/webhook/ses
 //aws sns topic/subscription service
+//app.get("/dashboard", authMiddleware, controller.dashboard);
+//change to: routes/userRoutes.js
+
+/* separation in a professional express project
+router
+
+controller
+
+service
+
+repository (
+
+middlewares
+*/
