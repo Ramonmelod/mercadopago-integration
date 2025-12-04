@@ -1,3 +1,5 @@
+//import paymentRepository from "../service/paymentRepository.js";
+
 describe("requests to mercado pago API", () => {
   test("GET in /users/me shell return 200 and a user json", async () => {
     const response = await fetch("http://localhost:8080/users/me");
@@ -11,7 +13,46 @@ describe("requests to mercado pago API", () => {
       brand_name: "Frutos feito à mão ",
     });
   });
-  test("POST /create-pix shell return 201 and data from PIX", async () => {
+
+  test("POST /verify-email should block invalid email with a 400 status code", async () => {
+    const response = await fetch("http://localhost:8080/verify-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "email-invalido-sem-arroba",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+
+    expect(body).toHaveProperty("error");
+    expect(body.error).toBe("Formato de email inválido.");
+  });
+  test("POST /create-pix shell block invalid email with a 400 status code", async () => {
+    const response = await fetch("http://localhost:8080/create-pix", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "email-invalido-sem-arroba",
+        name: "Ramon",
+      }),
+    });
+
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+
+    // O corpo deve conter um erro de mensagem
+    expect(body).toHaveProperty("error");
+    expect(body.error).toBe("Formato de email inválido.");
+  });
+  test("POST /create-pix should block request with missing verification code (400)", async () => {
     const response = await fetch("http://localhost:8080/create-pix", {
       method: "POST",
       headers: {
@@ -19,6 +60,29 @@ describe("requests to mercado pago API", () => {
       },
       body: JSON.stringify({
         email: "ramonmelo.com@gmail.com",
+        // code não enviado
+      }),
+    });
+
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+
+    expect(body).toHaveProperty("error");
+    expect(body.error).toBe("Código de verificação é obrigatório.");
+  });
+  test("POST /create-pix shell return 201 and data from PIX", async () => {
+    // const clientEmail = "ramonmelo.com@gmail.com";
+    // const storedVerificationCode =
+    //   await paymentRepository.getEmailVerificationCode(clientEmail);
+    const response = await fetch("http://localhost:8080/create-pix", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "ramonmelo.com@gmail.com",
+        code: 123456, //storedVerificationCode,
         name: "Ramon",
       }),
     });
