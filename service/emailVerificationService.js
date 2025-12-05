@@ -4,6 +4,7 @@ import emailTemplate from "../utils/emailTemplate.js";
 import paymentRepository from "./paymentRepository.js";
 import { configDotenv } from "dotenv";
 configDotenv();
+const verficationCodeExpirationTime = process.env.VERIFICATION_CODE_TIME;
 
 function generateVerificationCode() {
   return crypto.randomInt(100000, 999999).toString();
@@ -11,12 +12,16 @@ function generateVerificationCode() {
 
 async function sendEmailVerificationCode(clientEmail) {
   const code = generateVerificationCode();
-  paymentRepository.saveEmailVerificationCode(clientEmail, code, 60);
+  paymentRepository.saveEmailVerificationCode(
+    clientEmail,
+    code,
+    verficationCodeExpirationTime
+  );
 
   const emailData = {
     name: "Cliente",
     code: code,
-    minutes: process.env.VERIFICATION_CODE_TIME,
+    minutes: verficationCodeExpirationTime,
     email: clientEmail,
   };
 
