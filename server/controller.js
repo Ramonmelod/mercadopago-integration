@@ -364,9 +364,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
         validade_do_link: process.env.R2_LINK_TIME / 3600,
         email: clientEmail,
       };
-      const template = emailTemplate.loadTemplate(
-        "email-confirmation-code.txt"
-      );
+      const template = emailTemplate.loadTemplate("ebook-confirmation.txt");
       const emailBody = emailTemplate.applyVariables(template, emailData);
       console.log(emailBody);
       const info = await email.send({
