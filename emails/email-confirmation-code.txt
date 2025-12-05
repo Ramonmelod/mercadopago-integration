@@ -1,0 +1,16 @@
+Olá {{name}}, tudo bem?
+
+Para confirmar o seu e-mail, use o código abaixo:
+
+🔐 Código de verificação: {{code}}
+
+Este código é válido por {{minutes}} segundos.
+
+Se você não solicitou esta verificação, ignore esta mensagem.
+
+—
+Frutos Feito à Mão  
+contato@frutosfeitoamao.com.br  
+https://frutosfeitoamao.com.br
+
+Cancelar notificações: https://api.frutosfeitoamao.com.br/unsubscribe?email={{email}}

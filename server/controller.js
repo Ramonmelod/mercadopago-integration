@@ -9,6 +9,8 @@ import paymentService from "../service/paymentService.js";
 import userService from "../service/userService.js";
 import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
+import validator from "validator";
+import emailVerificationService from "../service/emailVerificationService.js";
 dotenv.config();
 const app = express();
 app.set("trust proxy", 1); //enable the trust-proxy
@@ -173,8 +175,94 @@ app.get("/payments/:id/status", async (req, res) => {
   }
 });
 
+app.post("/verify-email", async (req, res) => {
+  try {
+    const clientEmail = req.body.email;
+
+    // 1. Was the email sent?
+    if (!clientEmail) {
+      console.log(`o campo email não foi enviado`);
+      return res.status(400).json({
+        error: "Email é obrigatório.",
+        message: "Por favor, informe um endereço de e-mail válido.",
+      });
+    }
+
+    // 2. Is the email valid?
+    if (!validator.isEmail(clientEmail)) {
+      console.log(`${clientEmail} não é um email válido`);
+      return res.status(400).json({
+        error: "Formato de email inválido.",
+      });
+    }
+
+    // 3. Send the code
+    await emailVerificationService.sendEmailVerificationCode(clientEmail);
+
+    console.log(`Código de verificação enviado para ${clientEmail}`);
+
+    return res.status(200).json({
+      message: "Código de verificação enviado com sucesso.",
+      email: clientEmail,
+    });
+  } catch (error) {
+    console.error("❌ Erro ao enviar código de verificação:", error);
+    return res.status(500).json({
+      error: "Erro interno ao enviar o código de verificação.",
+    });
+  }
+});
 app.post("/create-pix", async (req, res) => {
   try {
+    //1.Email validation
+    const clientEmail = req.body.email;
+    if (!clientEmail) {
+      console.log(`o campo email não foi enviado`);
+      return res.status(400).json({
+        error: "Email é obrigatório.",
+        message: "Por favor, informe um endereço de e-mail válido.",
+      });
+    }
+    if (!validator.isEmail(clientEmail)) {
+      console.log(`${clientEmail} não é um email válido`);
+      return res.status(400).json({ error: "Formato de email inválido." });
+    }
+
+    //2.Email verification code validation
+    const code = req.body.code;
+    console.log(`here is the sent code: ${code}`);
+    if (!code) {
+      console.log(`o campo code não foi enviado`);
+      return res.status(400).json({
+        error: "Código de verificação é obrigatório.",
+        message:
+          "Por favor, informe o código de verificação enviado para o seu e-mail.",
+      });
+    }
+
+    const storedVerificationCode =
+      await paymentRepository.getEmailVerificationCode(clientEmail);
+    if (!storedVerificationCode) {
+      return res.status(403).json({
+        error: "Código expirado ou inexistente.",
+        message: "Solicite um novo código de verificação.",
+      });
+    }
+
+    console.log(`here is the stored code: ${storedVerificationCode}`);
+
+    if (storedVerificationCode !== code) {
+      console.log(
+        `o código de verificação está incorreto, o valor enviado foi ${code} e ele é: ${storedVerificationCode}`
+      );
+      return res.status(403).json({
+        error: "Código de verificação incorreto.",
+        message: "Por favor, tente novamente",
+      });
+    }
+
+    //3.Pix code generation
+    console.log(`Generating QRCODE to code: ${storedVerificationCode}`);
     const description = "E-book Frutos Feito à Mão";
     const response = await paymentService.createPix(
       req,
@@ -223,7 +311,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
 
     const paymentId = data.id;
     const response = await fetch(
-      `https://api.mercadopago.com/v1/payments/${paymentId}/`, //'http://localhost:8080/mock/payments/:id'
+      `https://api.mercadopago.com/v1/payments/${paymentId}/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -276,12 +364,18 @@ app.post("/webhook/mercadopago", async (req, res) => {
         validade_do_link: process.env.R2_LINK_TIME / 3600,
         email: clientEmail,
       };
-      const template = emailTemplate.loadTemplate("ebook-confirmation.txt");
+      const template = emailTemplate.loadTemplate(
+        "email-confirmation-code.txt"
+      );
       const emailBody = emailTemplate.applyVariables(template, emailData);
       console.log(emailBody);
       const info = await email.send({
-        from: "contato@frutosfeitoamao.com.br",
-        to: clientEmail,
+        from: "Frutos <contato@frutosfeitoamao.com.br>",
+        to: [
+          clientEmail,
+          "contato@frutosfeitoamao.com.br",
+          "contato@ramonmelo.com.br",
+        ],
         subject: "Confirmação de envio – Seu e-book Frutos Feito à Mão",
         text: emailBody,
       });
@@ -363,7 +457,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
 
-//https://mercadopago-integration-three.vercel.app/webhook/ses
+//https://api.frutosfeitoamao.com.br/webhook/ses
 //aws sns topic/subscription service
 //app.get("/dashboard", authMiddleware, controller.dashboard);
 //change to: routes/userRoutes.js

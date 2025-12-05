@@ -29,7 +29,7 @@ Suporte: contato@frutosfeitoamao.com.br
 Se preferir não receber mensagens futuras relacionadas às suas compras,
 basta solicitar a remoção através deste link:
 
-👉 https://mercadopago-integration-three.vercel.app/unsubscribe?email={{email}}
+👉 https://api.frutosfeitoamao.com.br/unsubscribe?email={{email}}
 
 Ou, se preferir, responda este e-mail com a palavra “unsubscribe”.
 
