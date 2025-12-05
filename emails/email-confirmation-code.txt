@@ -4,7 +4,7 @@ Para confirmar o seu e-mail, use o código abaixo:
 
 🔐 Código de verificação: {{code}}
 
-Este código é válido por {{minutes}} segundos.
+Este código é válido por {{time}} segundos.
 
 Se você não solicitou esta verificação, ignore esta mensagem.
 

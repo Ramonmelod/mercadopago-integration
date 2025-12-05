@@ -21,7 +21,7 @@ async function sendEmailVerificationCode(clientEmail) {
   const emailData = {
     name: "Cliente",
     code: code,
-    minutes: verficationCodeExpirationTime,
+    time: verficationCodeExpirationTime,
     email: clientEmail,
   };
 
