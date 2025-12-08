@@ -20,6 +20,7 @@ async function createPix(req, price, description, token) {
         email: req.body.email,
         first_name: name,
       },
+      external_reference: `ebook-${req.body.email}-${Date.now()}`,
     };
 
     const response = await payment.create({ body });

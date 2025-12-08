@@ -31,8 +31,18 @@ const statusLimiter = rateLimit({
   max: 63,
   message: "Muitas consultas de status.",
 });
+const verifyEmailLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 5,
+  message: {
+    error:
+      "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
+  },
+});
+
 app.use(["/create-pix"], pixLimiter);
 app.use(["/payments"], statusLimiter);
+app.use("/verify-email", verifyEmailLimiter);
 
 app.use(
   cors({

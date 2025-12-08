@@ -9,8 +9,8 @@ describe("requests to mercado pago API", () => {
     const responseBody = await response.json();
 
     expect(responseBody).toEqual({
-      first_name: "LUANA",
-      brand_name: "Frutos feito à mão ",
+      first_name: "49 647 815 LUANA",
+      brand_name: "49.647.815 LUANA RODRIGUES DA SILVA",
     });
   });
 
