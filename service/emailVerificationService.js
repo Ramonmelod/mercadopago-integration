@@ -3,6 +3,7 @@ import crypto from "crypto";
 import emailTemplate from "../utils/emailTemplate.js";
 import paymentRepository from "./paymentRepository.js";
 import { configDotenv } from "dotenv";
+import emailValidator from "../utils/emailValidator.js";
 configDotenv();
 const verficationCodeExpirationTime = process.env.VERIFICATION_CODE_TIME;
 
@@ -11,33 +12,44 @@ function generateVerificationCode() {
 }
 
 async function sendEmailVerificationCode(clientEmail) {
-  const code = generateVerificationCode();
-  paymentRepository.saveEmailVerificationCode(
-    clientEmail,
-    code,
-    verficationCodeExpirationTime
-  );
-
-  const emailData = {
-    name: "Cliente",
-    code: code,
-    time: verficationCodeExpirationTime,
-    email: clientEmail,
-  };
-
-  const template = emailTemplate.loadTemplate("email-confirmation-code.txt");
-  const emailBody = emailTemplate.applyVariables(template, emailData);
-
-  const info = await email.send({
-    from: "Frutos <contato@frutosfeitoamao.com.br>",
-    to: [
+  try {
+    const isEmailValid = await emailValidator.isValidEmailForSending(
+      clientEmail
+    );
+    if (!isEmailValid) {
+      console.log("E-mail inválido");
+      throw new Error("Email inválido");
+    }
+    const code = generateVerificationCode();
+    paymentRepository.saveEmailVerificationCode(
       clientEmail,
-      "contato@frutosfeitoamao.com.br",
-      "contato@ramonmelo.com.br",
-    ],
-    subject: "Código de confirmação de Email - Frutos Feito à Mão",
-    text: emailBody,
-  });
+      code,
+      verficationCodeExpirationTime
+    );
+
+    const emailData = {
+      name: "Cliente",
+      code: code,
+      time: verficationCodeExpirationTime,
+      email: clientEmail,
+    };
+
+    const template = emailTemplate.loadTemplate("email-confirmation-code.txt");
+    const emailBody = emailTemplate.applyVariables(template, emailData);
+
+    const info = await email.send({
+      from: "Frutos <contato@frutosfeitoamao.com.br>",
+      to: [
+        clientEmail,
+        "contato@frutosfeitoamao.com.br",
+        "contato@ramonmelo.com.br",
+      ],
+      subject: "Código de confirmação de Email - Frutos Feito à Mão",
+      text: emailBody,
+    });
+  } catch (error) {
+    throw error;
+  }
 }
 
 const emailVerificationService = {

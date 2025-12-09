@@ -9,7 +9,7 @@ import paymentService from "../service/paymentService.js";
 import userService from "../service/userService.js";
 import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
-import validator from "validator";
+import emailValidator from "../utils/emailValidator.js";
 import emailVerificationService from "../service/emailVerificationService.js";
 dotenv.config();
 const app = express();
@@ -75,6 +75,19 @@ app.use(
     },
   })
 );
+// Middleware that catchs invalid jason
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && "body" in err) {
+    console.error("❌ JSON inválido recebido:", err.message);
+
+    return res.status(400).json({
+      error: "JSON inválido",
+      message: "O corpo da requisição não está em formato JSON válido.",
+    });
+  }
+
+  next(err);
+});
 
 app.get("/", (req, res) => {
   res
@@ -180,7 +193,6 @@ app.get("/payments/:id/status", async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Internal server error",
-      details: error.message,
     });
   }
 });
@@ -198,15 +210,7 @@ app.post("/verify-email", async (req, res) => {
       });
     }
 
-    // 2. Is the email valid?
-    if (!validator.isEmail(clientEmail)) {
-      console.log(`${clientEmail} não é um email válido`);
-      return res.status(400).json({
-        error: "Formato de email inválido.",
-      });
-    }
-
-    // 3. Send the code
+    //2. Send the code
     await emailVerificationService.sendEmailVerificationCode(clientEmail);
 
     console.log(`Código de verificação enviado para ${clientEmail}`);
@@ -217,6 +221,15 @@ app.post("/verify-email", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Erro ao enviar código de verificação:", error);
+
+    if (error.message.includes("Email inválido")) {
+      return res.status(400).json({
+        error: "Email inválido.",
+        message:
+          "O endereço de email informado não é válido. Por favor, tente novamente.",
+      });
+    }
+
     return res.status(500).json({
       error: "Erro interno ao enviar o código de verificação.",
     });
@@ -230,12 +243,17 @@ app.post("/create-pix", async (req, res) => {
       console.log(`o campo email não foi enviado`);
       return res.status(400).json({
         error: "Email é obrigatório.",
-        message: "Por favor, informe um endereço de e-mail válido.",
+        message: "Por favor, informe um endereço de e-mail.",
       });
     }
-    if (!validator.isEmail(clientEmail)) {
+
+    const isEmailValid = await emailValidator.isValidEmailForSending(
+      clientEmail
+    );
+
+    if (!isEmailValid) {
       console.log(`${clientEmail} não é um email válido`);
-      return res.status(400).json({ error: "Formato de email inválido." });
+      return res.status(403).json({ error: "Formato de email inválido." });
     }
 
     //2.Email verification code validation
@@ -293,11 +311,11 @@ app.post("/create-pix", async (req, res) => {
         ticket_url: pixInfo.ticket_url,
       });
     } else {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: "Erro ao gerar seu código PIX!" });
     }
   } catch (error) {
     console.error("❌ Erro ao criar pagamento PIX:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Erro no servidor!" });
   }
 });
 
@@ -399,7 +417,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
     return;
   } catch (error) {
     console.error(error);
-    res.sendStatus(500);
+    res.status(500).json({ error: "Erro no servidor!" });
   }
 });
 app.post("/webhook/ses", async (req, res) => {
@@ -453,11 +471,11 @@ app.post("/webhook/ses", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // Caso não tenha o header do SNS
+    // In case the SNS has no header
     res.sendStatus(400);
   } catch (error) {
     console.error("SNS webhook error:", error);
-    res.sendStatus(500);
+    res.status(500).json({ error: "Erro no servidor!" });
   }
 });
 

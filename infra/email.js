@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import emailValidator from "../utils/emailValidator.js";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -13,11 +14,15 @@ const transporter = nodemailer.createTransport({
 });
 
 async function send(mailOptions) {
-  const response = await transporter.sendMail(mailOptions);
-  if (transporter.close) {
-    transporter.close();
+  try {
+    const response = await transporter.sendMail(mailOptions);
+    if (transporter.close) {
+      transporter.close();
+    }
+    return response;
+  } catch (error) {
+    throw error;
   }
-  return response;
 }
 
 const email = {
