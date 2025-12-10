@@ -39,11 +39,7 @@ async function sendEmailVerificationCode(clientEmail) {
 
     const info = await email.send({
       from: "Frutos <contato@frutosfeitoamao.com.br>",
-      to: [
-        clientEmail,
-        "contato@frutosfeitoamao.com.br",
-        "contato@ramonmelo.com.br",
-      ],
+      to: [clientEmail, "contato@frutosfeitoamao.com.br"],
       subject: "Código de confirmação de Email - Frutos Feito à Mão",
       text: emailBody,
     });
