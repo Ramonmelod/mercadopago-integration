@@ -200,7 +200,9 @@ app.get("/payments/:id/status", async (req, res) => {
 app.post("/verify-email", async (req, res) => {
   try {
     const clientEmail = req.body.email;
-
+    if (process.env.TEST_DELAY === "true") {
+      await new Promise((resolve) => setTimeout(resolve, 18000));
+    }
     // 1. Was the email sent?
     if (!clientEmail) {
       console.log(`o campo email não foi enviado`);
