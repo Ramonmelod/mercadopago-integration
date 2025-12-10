@@ -223,7 +223,7 @@ app.post("/verify-email", async (req, res) => {
     console.error("❌ Erro ao enviar código de verificação:", error);
 
     if (error.message.includes("Email inválido")) {
-      return res.status(400).json({
+      return res.status(403).json({
         error: "Email inválido.",
         message:
           "O endereço de email informado não é válido. Por favor, tente novamente.",
