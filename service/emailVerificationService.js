@@ -17,7 +17,7 @@ async function sendEmailVerificationCode(clientEmail) {
       clientEmail
     );
     if (!isEmailValid) {
-      console.log("E-mail inválido");
+      console.log(`E-mail inválido ${clientEmail}`);
       throw new Error("Email inválido");
     }
     const code = generateVerificationCode();
