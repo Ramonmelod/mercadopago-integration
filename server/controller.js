@@ -400,7 +400,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
       const info = await email.send({
         from: "Frutos <contato@frutosfeitoamao.com.br>",
         to: [clientEmail, "contato@frutosfeitoamao.com.br"],
-        subject: "Confirmação de envio – Seu e-book Frutos Feito à Mão",
+        subject: "Frutos Feito à Mão - Seu e-book iniciante pingente de natal",
         text: emailBody,
       });
       console.log(info);
