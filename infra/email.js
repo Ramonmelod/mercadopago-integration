@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import emailValidator from "../utils/emailValidator.js";
 dotenv.config();
 
 const transporter = nodemailer.createTransport({

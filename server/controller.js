@@ -331,7 +331,9 @@ app.post("/webhook/mercadopago", async (req, res) => {
     console.log("is mercado Pago? ", isMercadoPago);
     if (!isMercadoPago) {
       console.log("Requisição não autêntica");
-      return res.sendStatus(401);
+      return res.status(401).json({
+        error: "Not allowed",
+      });
     }
     const { type, data, id, action } = req.body;
 
@@ -415,7 +417,9 @@ app.post("/webhook/mercadopago", async (req, res) => {
     return;
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Erro no servidor!" });
+    res.status(500).json({
+      error: "Not allowed",
+    });
   }
 });
 app.post("/webhook/ses", async (req, res) => {
