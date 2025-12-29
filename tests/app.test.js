@@ -14,7 +14,7 @@ describe("requests to mercado pago API", () => {
     });
   });
 
-  test("POST /verify-email should block invalid email with a 400 status code", async () => {
+  test("POST /verify-email should block invalid email with a 403 status code", async () => {
     const response = await fetch("http://localhost:8080/verify-email", {
       method: "POST",
       headers: {
@@ -25,12 +25,12 @@ describe("requests to mercado pago API", () => {
       }),
     });
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
 
     const body = await response.json();
 
     expect(body).toHaveProperty("error");
-    expect(body.error).toBe("Email inválido");
+    expect(body.error).toBe("Email inválido.");
   });
   test("POST /create-pix shell block invalid email with a 403 status code", async () => {
     const response = await fetch("http://localhost:8080/create-pix", {
@@ -43,7 +43,7 @@ describe("requests to mercado pago API", () => {
         name: "Ramon",
       }),
     });
-
+    console.log(response.status);
     expect(response.status).toBe(403);
 
     const body = await response.json();

@@ -13,7 +13,7 @@ import emailValidator from "../utils/emailValidator.js";
 import emailVerificationService from "../service/emailVerificationService.js";
 dotenv.config();
 const app = express();
-app.set("trust proxy", 1); //enable the trust-proxy
+app.set("trust proxy", 1); //Enable trust proxy to get the real client IP behind Netlify/CDN
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
