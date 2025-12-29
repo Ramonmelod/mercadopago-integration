@@ -501,3 +501,27 @@ repository (
 
 middlewares
 */
+
+/*backend shell return:
+name
+
+value
+
+payment_id
+
+Frontend only shows what comes from backend
+
+Example:
+
+const product = PRODUCTS[req.body.productId];
+if (!product) return 400;
+createPix(product.price, product.description);
+
+ */
+
+/*POST /create-pix
+{
+  "email": "...",
+  "code": "...",
+  "product": "ebook-frutos"
+}*/
