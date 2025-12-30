@@ -294,7 +294,8 @@ app.post("/create-pix", async (req, res) => {
     //3.Pix code generation
 
     const productSlug = req.body.productSlug;
-    const productDescription = PRODUCTS[productSlug]?.description;
+    const productTitle = PRODUCTS[productSlug]?.title;
+    const productFileName = PRODUCTS[productSlug]?.file_name;
     const productPrice = PRODUCTS[productSlug]?.price / 100; // the price is in cents
 
     console.log(`Generating QRCODE to code: ${storedVerificationCode}`);
@@ -302,9 +303,10 @@ app.post("/create-pix", async (req, res) => {
     const response = await paymentService.createPix(
       req,
       productPrice,
-      productDescription,
+      productTitle,
       token,
-      productSlug
+      productSlug,
+      productFileName
     );
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
@@ -328,19 +330,23 @@ app.post("/create-pix", async (req, res) => {
 });
 
 app.post("/webhook/mercadopago", async (req, res) => {
-  //Real event Id: 135112247362
+  //Real events Id: 135112247362, 140034919080
   try {
     const isMercadoPago = authentication.verifyMercadoPagoSignature(
       req,
       secret
     );
     console.log("is mercado Pago? ", isMercadoPago);
+
+    /// shall be commented to by pass mercado livre autheticity check
     if (!isMercadoPago) {
       console.log("Requisição não autêntica");
       return res.status(401).json({
         error: "Not allowed",
       });
     }
+
+    /// shall be commented to by pass mercado livre autheticity check
     const { type, data, id, action } = req.body;
 
     if (type !== "payment" || action !== "payment.updated") {
@@ -363,8 +369,16 @@ app.post("/webhook/mercadopago", async (req, res) => {
     console.log(`event id: ${id}`);
     console.log("consultando url abaixo:");
     console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
+
     const paymentInfo = await response.json();
 
+    /*-------HERE I WILL GET THE PRODUCT TITLE AND OTHER INFORMATION TO USE IN SIGNEDURLSERVICE AND OTHERS------- */
+    const productSlug = paymentInfo.metadata.product_slug;
+    const fileName = paymentInfo.metadata.file_name;
+    const productTitle = paymentInfo.description;
+
+    console.log(`productSlug: ${productSlug}`);
+    const productPrice = PRODUCTS[productSlug]?.price / 100;
     // avoid e-mail to payments test/sandbox+
     if (!paymentInfo.live_mode) {
       console.log("A requisição recebida foi de teste");
@@ -382,7 +396,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
     const isApproved =
       paymentInfo.status === "approved" &&
       paymentInfo.status_detail === "accredited" &&
-      paymentInfo.transaction_amount === ebookPrice && // valor correto
+      paymentInfo.transaction_amount === productPrice && // valor correto
       paymentInfo.collector_id === 347508936;
 
     const status = paymentInfo.status;
@@ -390,9 +404,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
     console.log(status);
     console.log(status_detail);
 
-    const linkEbook = await signedUrlService.generateSignedUrl(
-      "Ebook iniciante pingente de natal.pdf"
-    );
+    const linkEbook = await signedUrlService.generateSignedUrl(fileName); // creates the signed link with the pdf
 
     if (isApproved) {
       console.log("pagamento confirmado");
@@ -408,7 +420,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
       const info = await email.send({
         from: "Frutos <contato@frutosfeitoamao.com.br>",
         to: [clientEmail, "contato@frutosfeitoamao.com.br"],
-        subject: "Frutos Feito à Mão - Seu e-book iniciante pingente de natal",
+        subject: `Frutos Feito à Mão - Seu ${productTitle}`,
         text: emailBody,
       });
       console.log(info);
