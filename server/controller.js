@@ -11,13 +11,13 @@ import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
 import emailValidator from "../utils/emailValidator.js";
 import emailVerificationService from "../service/emailVerificationService.js";
+import { PRODUCTS } from "../models/products.js";
 dotenv.config();
 const app = express();
 app.set("trust proxy", 1); //Enable trust proxy to get the real client IP behind Netlify/CDN
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
-const ebookPrice = Number(process.env.EBOOK_PRICE);
 
 const pixLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -292,13 +292,19 @@ app.post("/create-pix", async (req, res) => {
     }
 
     //3.Pix code generation
+
+    const productSlug = req.body.productSlug;
+    const productDescription = PRODUCTS[productSlug]?.description;
+    const productPrice = PRODUCTS[productSlug]?.price / 100; // the price is in cents
+
     console.log(`Generating QRCODE to code: ${storedVerificationCode}`);
-    const description = "E-book Frutos Feito à Mão";
+
     const response = await paymentService.createPix(
       req,
-      ebookPrice,
-      description,
-      token
+      productPrice,
+      productDescription,
+      token,
+      productSlug
     );
 
     const pixInfo = response?.point_of_interaction?.transaction_data;

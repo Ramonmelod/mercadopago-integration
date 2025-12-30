@@ -1,6 +1,5 @@
 export const PRODUCTS = {
   "risco-safari": {
-    id: "0",
     title: "Risco para bordar Safari",
     price: 1300,
     description:
@@ -9,7 +8,6 @@ export const PRODUCTS = {
   },
 
   "risco-jardim-borboleta": {
-    id: "1",
     title: "Risco para bordar Jardim de Borboleta",
     price: 1400,
     description:
@@ -18,7 +16,6 @@ export const PRODUCTS = {
   },
 
   "risco-amor-transbordou": {
-    id: "2",
     title: "Risco para bordar O amor Transbordou",
     price: 1000,
     description:
@@ -27,7 +24,6 @@ export const PRODUCTS = {
   },
 
   "risco-harry-potter": {
-    id: "3",
     title: "Risco para bordar Harry Potter",
     price: 1200,
     description:
@@ -36,7 +32,6 @@ export const PRODUCTS = {
   },
 
   "risco-lar-doce-lar": {
-    id: "4",
     title: "Risco para bordar Lar Doce Lar",
     price: 1300,
     description:
@@ -45,7 +40,6 @@ export const PRODUCTS = {
   },
 
   "curso-bordado-pingente-natal": {
-    id: "5",
     title:
       "Curso de Iniciação ao Bordado Livre – Crie Seu Próprio Pingente de Natal",
     price: 2600,
