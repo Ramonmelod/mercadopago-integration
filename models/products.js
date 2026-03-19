@@ -1,7 +1,7 @@
 export const PRODUCTS = {
   "risco-safari": {
     title: "Risco para bordar Safari",
-    price: 1,
+    price: 1300,
     description:
       "Risco digital para bordado Safari, pronto para impressão, com versões personalizáveis e sugestão de pontos.",
     file_name: "risco Safari.pdf",

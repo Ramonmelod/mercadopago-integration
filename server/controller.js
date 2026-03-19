@@ -333,11 +333,11 @@ app.post("/create-pix", async (req, res) => {
 app.post("/webhook/mercadopago", async (req, res) => {
   //Real events Id: 135112247362, 140034919080
   try {
-    /*const isMercadoPago = authentication.verifyMercadoPagoSignature(
+    const isMercadoPago = authentication.verifyMercadoPagoSignature(
       req,
       secret,
-    );*/
-    const isMercadoPago = true;
+    );
+
     console.log("is mercado Pago? ", isMercadoPago);
 
     /// shall be commented to by pass mercado livre autheticity check
