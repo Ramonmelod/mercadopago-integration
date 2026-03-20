@@ -8,7 +8,7 @@ async function createPix(
   description,
   token,
   productSlug,
-  fileName
+  fileName,
 ) {
   try {
     const client = new MercadoPagoConfig({
@@ -33,6 +33,7 @@ async function createPix(
         product_type: "digital",
         source: "website",
         file_name: fileName,
+        clientEmail: req.body.email,
       },
     };
 
