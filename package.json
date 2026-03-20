@@ -10,7 +10,7 @@
     "dev": "node server/controller.js",
     "services:up": "docker compose -f infra/compose.dev.yaml up -d",
     "services:stop": "docker compose -f infra/compose.dev.yaml stop",
-    "services:down": "docker compose -f infra/compose.dev.yaml down",
+    "services:down": "docker compose -f infra/compose.dev.yaml down -v",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },

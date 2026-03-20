@@ -11,13 +11,13 @@ import signedUrlService from "../service/signedUrlService.js";
 import { rateLimit } from "express-rate-limit";
 import emailValidator from "../utils/emailValidator.js";
 import emailVerificationService from "../service/emailVerificationService.js";
+import { PRODUCTS } from "../models/products.js";
 dotenv.config();
 const app = express();
 app.set("trust proxy", 1); //Enable trust proxy to get the real client IP behind Netlify/CDN
 const PORT = process.env.PORT || 8080;
 const token = process.env.TOKEN;
 const secret = process.env.MP_WEBHOOK_SECRET;
-const ebookPrice = Number(process.env.EBOOK_PRICE);
 
 const pixLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -49,7 +49,7 @@ app.use(
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 app.use((req, res, next) => {
@@ -57,7 +57,7 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
       "Access-Control-Allow-Methods",
-      "GET,POST,PUT,DELETE,OPTIONS"
+      "GET,POST,PUT,DELETE,OPTIONS",
     );
     res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
     res.setHeader("Access-Control-Max-Age", "600");
@@ -73,7 +73,7 @@ app.use(
     verify: (req, res, buf) => {
       req.rawBody = buf.toString(); // guarda o corpo original como string
     },
-  })
+  }),
 );
 // Middleware that catchs invalid jason
 app.use((err, req, res, next) => {
@@ -158,7 +158,7 @@ app.get("/payments/:id/status", async (req, res) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -249,9 +249,8 @@ app.post("/create-pix", async (req, res) => {
       });
     }
 
-    const isEmailValid = await emailValidator.isValidEmailForSending(
-      clientEmail
-    );
+    const isEmailValid =
+      await emailValidator.isValidEmailForSending(clientEmail);
 
     if (!isEmailValid) {
       console.log(`${clientEmail} não é um email válido`);
@@ -283,7 +282,7 @@ app.post("/create-pix", async (req, res) => {
 
     if (storedVerificationCode !== code) {
       console.log(
-        `o código de verificação está incorreto, o valor enviado foi ${code} e ele é: ${storedVerificationCode}`
+        `o código de verificação está incorreto, o valor enviado foi ${code} e ele é: ${storedVerificationCode}`,
       );
       return res.status(403).json({
         error: "Código de verificação incorreto.",
@@ -292,13 +291,23 @@ app.post("/create-pix", async (req, res) => {
     }
 
     //3.Pix code generation
+
+    const productSlug = req.body.productSlug;
+    const productTitle = PRODUCTS[productSlug]?.title;
+    console.log("************");
+    console.log(productTitle);
+    const productFileName = PRODUCTS[productSlug]?.file_name;
+    const productPrice = PRODUCTS[productSlug]?.price / 100; // the price is in cents
+
     console.log(`Generating QRCODE to code: ${storedVerificationCode}`);
-    const description = "E-book Frutos Feito à Mão";
+
     const response = await paymentService.createPix(
       req,
-      ebookPrice,
-      description,
-      token
+      productPrice,
+      productTitle,
+      token,
+      productSlug,
+      productFileName,
     );
 
     const pixInfo = response?.point_of_interaction?.transaction_data;
@@ -322,19 +331,24 @@ app.post("/create-pix", async (req, res) => {
 });
 
 app.post("/webhook/mercadopago", async (req, res) => {
-  //Real event Id: 135112247362
+  //Real events Id: 135112247362, 140034919080, 150498851621 ----->>> clientEmail
   try {
     const isMercadoPago = authentication.verifyMercadoPagoSignature(
       req,
-      secret
+      secret,
     );
+
     console.log("is mercado Pago? ", isMercadoPago);
+
+    /// shall be commented to by pass mercado livre autheticity check
     if (!isMercadoPago) {
       console.log("Requisição não autêntica");
       return res.status(401).json({
         error: "Not allowed",
       });
     }
+
+    /// shall be commented to by pass mercado livre autheticity check
     const { type, data, id, action } = req.body;
 
     if (type !== "payment" || action !== "payment.updated") {
@@ -348,22 +362,35 @@ app.post("/webhook/mercadopago", async (req, res) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
-    const clientEmail = await paymentRepository.getCustomerEmail(paymentId);
-    console.log(clientEmail);
+    const clientEmailRedis =
+      await paymentRepository.getCustomerEmail(paymentId); //see still is needed
+    console.log(clientEmailRedis);
 
     console.log(`event id: ${id}`);
     console.log("consultando url abaixo:");
     console.log(`https://api.mercadopago.com/v1/payments/${paymentId}`);
+
     const paymentInfo = await response.json();
 
+    /*-------HERE I WILL GET THE PRODUCT TITLE AND OTHER INFORMATION TO USE IN SIGNEDURLSERVICE AND OTHERS------- */
+    const productSlug = paymentInfo.metadata?.product_slug;
+    const clientEmail = paymentInfo.metadata?.client_email;
+
+    const productTitle = PRODUCTS[productSlug]?.title;
+    const productDescription = paymentInfo.description;
+    console.log(paymentInfo.metadata);
+
+    console.log(`productSlug: ${productSlug}`);
+    const productPrice = PRODUCTS[productSlug]?.price / 100;
     // avoid e-mail to payments test/sandbox+
     if (!paymentInfo.live_mode) {
       console.log("A requisição recebida foi de teste");
       return res.sendStatus(200);
     }
+    const productName = productSlug + ".pdf";
 
     const searchedId = await paymentRepository.wasPaymentProcessed(id); // query to redis
 
@@ -376,7 +403,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
     const isApproved =
       paymentInfo.status === "approved" &&
       paymentInfo.status_detail === "accredited" &&
-      paymentInfo.transaction_amount === ebookPrice && // valor correto
+      paymentInfo.transaction_amount === productPrice && // valor correto
       paymentInfo.collector_id === 347508936;
 
     const status = paymentInfo.status;
@@ -384,28 +411,26 @@ app.post("/webhook/mercadopago", async (req, res) => {
     console.log(status);
     console.log(status_detail);
 
-    const linkEbook = await signedUrlService.generateSignedUrl(
-      "Ebook iniciante pingente de natal.pdf"
-    );
+    const productLink = await signedUrlService.generateSignedUrl(productName); // creates the signed link with the pdf
 
     if (isApproved) {
       console.log("pagamento confirmado");
       const emailData = {
         nome: "Cliente",
-        link_de_download: linkEbook,
+        ProductName: productTitle,
+        productDescription: productDescription,
+        link_de_download: productLink,
         validade_do_link: process.env.R2_LINK_TIME / 3600,
         email: clientEmail,
       };
       const template = emailTemplate.loadTemplate("ebook-confirmation.txt");
       const emailBody = emailTemplate.applyVariables(template, emailData);
-      console.log(emailBody);
       const info = await email.send({
         from: "Frutos <contato@frutosfeitoamao.com.br>",
         to: [clientEmail, "contato@frutosfeitoamao.com.br"],
-        subject: "Frutos Feito à Mão - Seu e-book iniciante pingente de natal",
+        subject: `Frutos Feito à Mão - Seu ${productTitle}`,
         text: emailBody,
       });
-      console.log(info);
       if (info.rejected.length > 0) {
         console.error("⚠️ Email rejeitado:", info.rejected);
       }
@@ -501,3 +526,27 @@ repository (
 
 middlewares
 */
+
+/*backend shell return:
+name
+
+value
+
+payment_id
+
+Frontend only shows what comes from backend
+
+Example:
+
+const product = PRODUCTS[req.body.productId];
+if (!product) return 400;
+createPix(product.price, product.description);
+
+ */
+
+/*POST /create-pix
+{
+  "email": "...",
+  "code": "...",
+  "product": "ebook-frutos"
+}*/

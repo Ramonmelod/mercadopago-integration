@@ -2,7 +2,14 @@ import paymentRepository from "./paymentRepository.js";
 import { v4 as uuidv4 } from "uuid";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 
-async function createPix(req, price, description, token) {
+async function createPix(
+  req,
+  price,
+  description,
+  token,
+  productSlug,
+  fileName,
+) {
   try {
     const client = new MercadoPagoConfig({
       accessToken: token,
@@ -20,7 +27,14 @@ async function createPix(req, price, description, token) {
         email: req.body.email,
         first_name: name,
       },
-      external_reference: `ebook-${req.body.email}-${Date.now()}`,
+      external_reference: `${productSlug}-${req.body.email}-${Date.now()}`,
+      metadata: {
+        product_slug: productSlug,
+        product_type: "digital",
+        source: "website",
+        file_name: fileName,
+        clientEmail: req.body.email,
+      },
     };
 
     const response = await payment.create({ body });
