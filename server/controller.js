@@ -331,7 +331,7 @@ app.post("/create-pix", async (req, res) => {
 });
 
 app.post("/webhook/mercadopago", async (req, res) => {
-  //Real events Id: 135112247362, 140034919080
+  //Real events Id: 135112247362, 140034919080, 150498851621 ----->>> clientEmail
   try {
     const isMercadoPago = authentication.verifyMercadoPagoSignature(
       req,
@@ -365,8 +365,9 @@ app.post("/webhook/mercadopago", async (req, res) => {
       },
     );
 
-    const clientEmail = await paymentRepository.getCustomerEmail(paymentId);
-    console.log(clientEmail);
+    const clientEmailRedis =
+      await paymentRepository.getCustomerEmail(paymentId); //see still is needed
+    console.log(clientEmailRedis);
 
     console.log(`event id: ${id}`);
     console.log("consultando url abaixo:");
@@ -376,6 +377,8 @@ app.post("/webhook/mercadopago", async (req, res) => {
 
     /*-------HERE I WILL GET THE PRODUCT TITLE AND OTHER INFORMATION TO USE IN SIGNEDURLSERVICE AND OTHERS------- */
     const productSlug = paymentInfo.metadata?.product_slug;
+    const clientEmail = paymentInfo.metadata?.client_email;
+
     const productTitle = PRODUCTS[productSlug]?.title;
     const productDescription = paymentInfo.description;
     console.log(paymentInfo.metadata);
