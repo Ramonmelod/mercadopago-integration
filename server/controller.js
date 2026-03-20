@@ -294,6 +294,8 @@ app.post("/create-pix", async (req, res) => {
 
     const productSlug = req.body.productSlug;
     const productTitle = PRODUCTS[productSlug]?.title;
+    console.log(req.body);
+    console.log(productSlug);
     console.log("************");
     console.log(productTitle);
     const productFileName = PRODUCTS[productSlug]?.file_name;
